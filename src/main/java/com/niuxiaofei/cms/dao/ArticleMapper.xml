@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.niuxiaofei.cms.dao.ArticleMapper">
+	<resultMap type="com.niuxiaofei.cms.domain.Special"
+		id="specials">
+		<id column="aid" property="id" />
+		<result column="atitle" property="title" />
+		<result column="abstracts" property="abstracts" />
+		<result column="created" property="created" />
+		<collection property="articles" ofType="Article">
+			<id column="cid" property="id" />
+			<result column="ctitle" property="title"/>
+		</collection>
+	</resultMap>
+	<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+		insert into cms_article set
+		title=#{title},content=#{content},picture=#{picture},
+		channel_id=#{channelId},category_id=#{categoryId},user_id=#{userId},
+		hits=#{hits},hot=#{hot},status=#{status},
+		deleted=#{deleted},created=#{created},updated=now(),type=#{type},titleType=#{titleType},zhaiyao=#{zhaiYao}
+	</insert>
+	
+	<select id="select" resultType="map">
+		select
+		a.*,u.username,u.nickname,a.hits,a.status
+		from cms_article a LEFT JOIN cms_user u on a.user_id = u.id
+		
+		where a.id =#{id}
+			
+		order by updated desc
+	</select>
+	<select id="getTitles" resultType="map">
+		select
+		a.*,u.username,u.nickname,a.hits,a.status
+		from cms_article a LEFT JOIN cms_user u on a.user_id = u.id
+		<where>
+			<if test="channelId!=null and channelId!=''">
+				a.channel_id =#{channelId}
+			</if>
+			<if test="categoryId!=null and categoryId!=''">
+				and a.category_id =#{categoryId}
+			</if>
+			<if test="hot !=null and hot!=''">
+				and a.hot =#{hot}
+			</if>
+			<if test="status!=null">
+				and a.status =#{status}
+			</if>
+			<if test="type !=null and type!=''">
+				and a.type =#{type}
+			</if>
+			<if test="type !=null and type!=''">
+				and a.type =#{type}
+			</if>
+		</where>
+		order by updated desc
+	</select>
+	<select id="get" resultType="map">
+		select a.*,b.username,c.name,d.name
+		catename from cms_article a LEFT JOIN cms_user b
+		on a.user_id = b.id
+		LEFT JOIN cms_channel c on a.channel_id
+		= c.id LEFT JOIN cms_category d
+		on a.category_id =d.id
+		where a.id =#{id}
+	</select>
+	<update id="update">
+		update cms_article set status=#{status} where id
+		=#{id}
+	</update>
+	<select id="selects" resultMap="specials">
+		select a.id aid,a.title atitle,a.abstracts,c.id cid,c.title ctitle from cms_special a LEFT JOIN
+		cms_special_article b on a.id = b. sid
+		LEFT JOIN cms_article c on b.aid = c.id
+	</select>
+	
+	<delete id="delArticleById">
+		delete from cms_article where id in 
+		<foreach collection="array" open="(" close=")" item="ids" separator=",">
+			${ids}
+		</foreach>
+	</delete>
+	<update id="updateHits">
+		update cms_article set hits = hits+1 where id = ${value}
+	</update>
+</mapper>
